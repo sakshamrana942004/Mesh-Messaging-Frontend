@@ -1,0 +1,26 @@
+.dashboard{
+display:flex;
+height:100vh;
+background:#0f172a;
+color:white;
+}
+
+.sidebar{
+width:250px;
+padding:20px;
+border-right:1px solid gray;
+}
+
+.main{
+flex:1;
+padding:20px;
+}
+
+.chatbox{
+height:350px;
+overflow:auto;
+border:1px solid gray;
+margin-bottom:10px;
+padding:10px;
+background:#111827;
+}
