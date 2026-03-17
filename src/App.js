@@ -1,49 +1,51 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import { io } from "socket.io-client";
 
 function App() {
 
   const [messages, setMessages] = useState([]);
   const [msg, setMsg] = useState("");
-  const [socket, setSocket] = useState(null);
+  const [ws, setWs] = useState(null);
 
   useEffect(() => {
 
-    // ✅ Socket.IO connection
-    const s = io("https://mesh-messaging-backend.onrender.com", {
-      transports: ["websocket"], // force websocket
-    });
+    // ✅ Correct WebSocket
+    const socket = new WebSocket("wss://mesh-messaging-backend.onrender.com/ws");
 
-    s.on("connect", () => {
-      console.log("✅ Connected to server");
-    });
-
-    s.on("disconnect", () => {
-      console.log("❌ Disconnected");
-    });
-
-    // 👇 receive message
-    s.on("chat", (data) => {
-      setMessages(prev => [...prev, "Node: " + data]);
-    });
-
-    setSocket(s);
-
-    return () => {
-      s.disconnect();
+    socket.onopen = () => {
+      console.log("✅ WebSocket Connected");
     };
+
+    socket.onmessage = (event) => {
+
+      const data = JSON.parse(event.data);
+
+      if (data.type === "chat") {
+        setMessages(prev => [...prev, "Node: " + data.message]);
+      }
+
+      if (data.type === "lora") {
+        setMessages(prev => [...prev, "📡 LoRa: " + data.message]);
+      }
+
+    };
+
+    socket.onclose = () => {
+      console.log("❌ WebSocket Disconnected");
+    };
+
+    setWs(socket);
 
   }, []);
 
   const sendMessage = () => {
 
-    if (!msg || !socket) return;
+    if (!msg || !ws) return;
 
-    // 👇 send message
-    socket.emit("chat", msg);
+    ws.send(msg);
 
     setMessages(prev => [...prev, "You: " + msg]);
+
     setMsg("");
 
   };
@@ -53,27 +55,6 @@ function App() {
     <div className="container">
 
       <h1>🛰 LoRa Mesh Control Panel</h1>
-
-      <div className="dashboard">
-
-        <div className="panel">
-          <h2>📡 LoRa Nodes</h2>
-          <p>No LoRa nodes detected</p>
-        </div>
-
-        <div className="panel">
-          <h2>📊 Telemetry</h2>
-          <p>RSSI: --</p>
-          <p>Battery: --</p>
-          <p>GPS: --</p>
-        </div>
-
-        <div className="panel">
-          <h2>🗺 Network Map</h2>
-          <p>Map integration coming soon</p>
-        </div>
-
-      </div>
 
       <div className="chat">
 
