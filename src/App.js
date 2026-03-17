@@ -9,7 +9,7 @@ function App() {
 
   useEffect(() => {
 
-    // ✅ Correct WebSocket
+    // ✅ WebSocket connection
     const socket = new WebSocket("wss://mesh-messaging-backend.onrender.com/ws");
 
     socket.onopen = () => {
@@ -20,12 +20,9 @@ function App() {
 
       const data = JSON.parse(event.data);
 
-      if (data.type === "chat") {
-        setMessages(prev => [...prev, "Node: " + data.message]);
-      }
-
-      if (data.type === "lora") {
-        setMessages(prev => [...prev, "📡 LoRa: " + data.message]);
+      // ✅ show both chat + join/leave messages
+      if (data.type === "chat" || data.type === "info") {
+        setMessages(prev => [...prev, data.message]);
       }
 
     };
