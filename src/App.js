@@ -9,7 +9,7 @@ function App() {
 
   useEffect(() => {
 
-    const socket = new WebSocket("ws://localhost:8000/ws");
+    const socket = new WebSocket("wss://your-backend.onrender.com/ws");
 
     socket.onopen = () => {
       console.log("WebSocket Connected");
