@@ -1,55 +1,49 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
+import { io } from "socket.io-client";
 
 function App() {
 
   const [messages, setMessages] = useState([]);
   const [msg, setMsg] = useState("");
-  const [ws, setWs] = useState(null);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
 
-    const socket = new WebSocket("wss://your-backend.onrender.com/ws");
+    // ✅ Socket.IO connection
+    const s = io("https://mesh-messaging-backend.onrender.com", {
+      transports: ["websocket"], // force websocket
+    });
 
-    socket.onopen = () => {
-      console.log("WebSocket Connected");
+    s.on("connect", () => {
+      console.log("✅ Connected to server");
+    });
+
+    s.on("disconnect", () => {
+      console.log("❌ Disconnected");
+    });
+
+    // 👇 receive message
+    s.on("chat", (data) => {
+      setMessages(prev => [...prev, "Node: " + data]);
+    });
+
+    setSocket(s);
+
+    return () => {
+      s.disconnect();
     };
-
-    socket.onmessage = (event) => {
-
-      try{
-
-        const data = JSON.parse(event.data);
-
-        if(data.type === "chat"){
-          setMessages(prev => [...prev, "Node: " + data.message]);
-        }
-
-      }catch{
-
-        setMessages(prev => [...prev, event.data]);
-
-      }
-
-    };
-
-    socket.onclose = () => {
-      console.log("WebSocket Disconnected");
-    };
-
-    setWs(socket);
 
   }, []);
 
-
   const sendMessage = () => {
 
-    if(!msg || !ws) return;
+    if (!msg || !socket) return;
 
-    ws.send(msg);
+    // 👇 send message
+    socket.emit("chat", msg);
 
     setMessages(prev => [...prev, "You: " + msg]);
-
     setMsg("");
 
   };
@@ -87,7 +81,7 @@ function App() {
 
         <div className="chatbox">
 
-          {messages.map((m,i)=>(
+          {messages.map((m, i) => (
             <div key={i} className="msg">
               {m}
             </div>
@@ -98,13 +92,13 @@ function App() {
         <div className="input">
 
           <input
-          value={msg}
-          onChange={(e)=>setMsg(e.target.value)}
-          placeholder="Type message..."
+            value={msg}
+            onChange={(e) => setMsg(e.target.value)}
+            placeholder="Type message..."
           />
 
           <button onClick={sendMessage}>
-          Send
+            Send
           </button>
 
         </div>
